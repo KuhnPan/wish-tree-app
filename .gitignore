@@ -1,0 +1,15 @@
+# Ignore dependency folders everywhere
+node_modules/
+
+# Ignore environment secrets everywhere (The Golden Rule)
+.env
+.env.local
+.env.production
+
+# Mac OS junk
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
