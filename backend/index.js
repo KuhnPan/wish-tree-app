@@ -1,41 +1,61 @@
+require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const cors = require('cors'); // Good practice even for monoliths
+const cors = require('cors');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 const PORT = 3000;
 const DATA_FILE = path.join(__dirname, 'wishes.json');
 
+// Init Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
 app.use(express.json());
 app.use(cors());
 
-// 1. Helper: Load Wishes
+// --- HELPERS ---
 function loadWishes() {
     if (!fs.existsSync(DATA_FILE)) return [];
     return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
 }
-
-// 2. Helper: Save Wishes
 function saveWishes(wishes) {
     fs.writeFileSync(DATA_FILE, JSON.stringify(wishes, null, 2));
 }
 
-// --- API ENDPOINTS (Matching Yesterday's Logic) ---
+// --- ENDPOINTS ---
 
-// GET /api/wishes - Retrieve all wishes
+// 1. GET Wishes
 app.get('/api/wishes', (req, res) => {
     const wishes = loadWishes();
-    res.json(wishes.reverse()); // Newest first
+    res.json(wishes.reverse());
 });
 
-// POST /api/wishes - Create a new wish
+// 2. POLISH Wish (The AI Magic)
+app.post('/api/polish', async (req, res) => {
+    const { content } = req.body;
+    if (!content) return res.status(400).json({ error: "Content required" });
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-pro"});
+        const prompt = `Rewrite the following wish to be more inspiring, poetic, and hopeful, but keep it under 20 words: "${content}"`;
+        
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const polished = response.text().replace(/"/g, ''); // Remove quotes
+        
+        res.json({ polished });
+    } catch (error) {
+        console.error("Gemini Error:", error);
+        res.status(500).json({ error: "AI is sleeping. Try again." });
+    }
+});
+
+// 3. POST Wish
 app.post('/api/wishes', (req, res) => {
     const { content, anonymousId } = req.body;
-    
-    if (!content) {
-        return res.status(400).json({ error: "Content required" });
-    }
+    if (!content) return res.status(400).json({ error: "Content required" });
 
     const wishes = loadWishes();
     const newWish = {
@@ -43,19 +63,11 @@ app.post('/api/wishes', (req, res) => {
         content,
         anonymousId: anonymousId || "anon",
         createdAt: new Date().toISOString(),
-        status: "PENDING" // As per the Canvas demo logic
     };
 
     wishes.push(newWish);
     saveWishes(wishes);
-
-    console.log(`[New Wish] ${content}`);
     res.status(201).json(newWish);
 });
 
-// Health Check
-app.get('/health', (req, res) => res.send('Wish Tree Backend: OK'));
-
-app.listen(PORT, () => {
-    console.log(`🌳 Wish Tree Backend running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🌳 Backend + AI running on ${PORT}`));

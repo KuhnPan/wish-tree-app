@@ -8,9 +8,13 @@
         body { font-family: 'Courier New', monospace; background-color: #f4f4f9; text-align: center; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { color: #2c3e50; }
-        input { padding: 10px; width: 70%; border: 1px solid #ddd; border-radius: 4px; }
-        button { padding: 10px 20px; background-color: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #219150; }
+        .input-group { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        input { padding: 10px; width: 60%; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold;}
+        .btn-polish { background-color: #8e44ad; } /* Purple for AI */
+        .btn-submit { background-color: #27ae60; } /* Green for Plant */
+        button:hover { opacity: 0.9; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
         ul { list-style: none; padding: 0; margin-top: 20px; text-align: left; }
         li { background: #ecf0f1; margin: 10px 0; padding: 10px; border-left: 5px solid #3498db; animation: fadeIn 0.5s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -20,8 +24,9 @@
     <div class="container">
         <h1>🌳 The Wish Tree</h1>
         <div class="input-group">
-            <input type="text" id="wish-input" placeholder="What is your startup dream?">
-            <button onclick="submitWish()">Plant Wish</button>
+            <input type="text" id="wish-input" placeholder="I wish for...">
+            <button class="btn-polish" onclick="polishWish()" id="btn-polish">✨ AI Polish</button>
+            <button class="btn-submit" onclick="submitWish()">Plant Wish</button>
         </div>
         
         <h3>Growing Wishes:</h3>
@@ -31,9 +36,37 @@
     </div>
 
     <script>
-        // "Startup Zero" Optimization: Relative Path
-        // We no longer need the Render URL. The Nginx proxy handles this locally.
-        const API_URL = ''; 
+        const API_URL = ''; // Relative path
+
+        async function polishWish() {
+            const input = document.getElementById('wish-input');
+            const btn = document.getElementById('btn-polish');
+            const originalText = input.value;
+
+            if (!originalText) return alert("Write something first!");
+
+            btn.disabled = true;
+            btn.textContent = "✨ Dreaming...";
+
+            try {
+                const res = await fetch(`${API_URL}/api/polish`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: originalText })
+                });
+                const data = await res.json();
+                
+                if (data.polished) {
+                    input.value = data.polished;
+                }
+            } catch (err) {
+                console.error(err);
+                alert("AI is taking a nap.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "✨ AI Polish";
+            }
+        }
 
         async function fetchWishes() {
             try {
@@ -41,41 +74,30 @@
                 const wishes = await response.json();
                 const list = document.getElementById('wish-list');
                 list.innerHTML = ''; 
-                
                 wishes.forEach(wish => {
                     const listItem = document.createElement('li');
                     listItem.textContent = `🌱 ${wish.content}`;
                     list.appendChild(listItem);
                 });
             } catch (error) {
-                console.error("Error fetching wishes:", error);
-                document.getElementById('wish-list').innerHTML = '<li style="color:red">Error connecting to Wish Tree API.</li>';
+                console.error(error);
             }
         }
 
         async function submitWish() {
             const content = document.getElementById('wish-input').value;
             if (!content) return;
-
             const anonymousId = "user-" + Math.floor(Math.random() * 10000); 
 
-            try {
-                const response = await fetch(`${API_URL}/api/wishes`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content, anonymousId })
-                });
-
-                if (response.ok) {
-                    document.getElementById('wish-input').value = ''; 
-                    fetchWishes(); // Refresh
-                }
-            } catch (error) {
-                alert("Failed to plant wish. Server might be pruning.");
-            }
+            await fetch(`${API_URL}/api/wishes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content, anonymousId })
+            });
+            document.getElementById('wish-input').value = ''; 
+            fetchWishes();
         }
 
-        // Init
         fetchWishes(); 
     </script>
 </body>
