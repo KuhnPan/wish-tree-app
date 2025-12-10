@@ -38,7 +38,7 @@ app.post('/api/polish', async (req, res) => {
     if (!content) return res.status(400).json({ error: "Content required" });
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash"});
         const prompt = `Rewrite the following wish to be more inspiring, poetic, and hopeful, but keep it under 20 words: "${content}"`;
         
         const result = await model.generateContent(prompt);
