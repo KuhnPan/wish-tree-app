@@ -8,97 +8,106 @@
         body { font-family: 'Courier New', monospace; background-color: #f4f4f9; text-align: center; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
-        input { padding: 10px; width: 65%; border: 1px solid #ddd; border-radius: 4px; }
+        /* Input & Button Group */
+        .input-group { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        input { padding: 12px; width: 60%; border: 2px solid #ddd; border-radius: 6px; font-size: 16px; }
         
-        /* Updated Button Styles for State */
-        button { padding: 10px 20px; background-color: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background 0.3s; }
-        button:hover { background-color: #219150; }
-        button:disabled { background-color: #95a5a6; cursor: wait; }
-        
-        ul { list-style: none; padding: 0; margin-top: 20px; text-align: left; }
-        li { background: #ecf0f1; margin: 10px 0; padding: 10px; border-left: 5px solid #3498db; animation: fadeIn 0.5s; }
-        
-        .polished-tag { font-size: 0.8em; color: #8e44ad; font-weight: bold; margin-left: 10px; }
-        
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* THE TWO BUTTONS */
+        .btn { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
+        .btn-magic { background-color: #8e44ad; } /* Purple for AI */
+        .btn-magic:hover { background-color: #732d91; }
+        .btn-plant { background-color: #27ae60; } /* Green for Save */
+        .btn-plant:hover { background-color: #219150; }
+        .btn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+
+        ul { list-style: none; padding: 0; text-align: left; }
+        li { background: #ecf0f1; margin: 10px 0; padding: 15px; border-left: 5px solid #27ae60; border-radius: 4px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🌳 The Wish Tree</h1>
+        
         <div class="input-group">
-            <input type="text" id="wish-input" placeholder="Type a raw wish (e.g. 'I want money')">
-            <button id="submit-btn" onclick="submitWish()">Plant Wish</button>
+            <input type="text" id="wish-input" placeholder="I want to be rich...">
+        </div>
+        
+        <div class="input-group">
+            <button class="btn btn-magic" id="polish-btn" onclick="polishWish()">✨ Magic Polish</button>
+            <button class="btn btn-plant" id="plant-btn" onclick="plantWish()">🌱 Plant Wish</button>
         </div>
         
         <h3>Growing Wishes:</h3>
-        <ul id="wish-list">
-            <li>Loading ecosystem...</li>
-        </ul>
+        <ul id="wish-list"></ul>
     </div>
 
     <script>
-        const API_URL = ''; // Relative path for Nginx
+        const API_URL = ''; 
 
-        async function fetchWishes() {
-            try {
-                const response = await fetch(`${API_URL}/api/wishes`);
-                const wishes = await response.json();
-                const list = document.getElementById('wish-list');
-                list.innerHTML = ''; 
-                
-                wishes.forEach(wish => {
-                    const listItem = document.createElement('li');
-                    // Display the content (which is now AI polished)
-                    listItem.innerHTML = `🌱 ${wish.content}`;
-                    list.appendChild(listItem);
-                });
-            } catch (error) {
-                console.error("Error fetching wishes:", error);
-            }
-        }
+        // 1. MAGIC POLISH (Calls AI, updates Input)
+        async function polishWish() {
+            const input = document.getElementById('wish-input');
+            const btn = document.getElementById('polish-btn');
+            if (!input.value) return;
 
-        async function submitWish() {
-            const inputField = document.getElementById('wish-input');
-            const submitBtn = document.getElementById('submit-btn');
-            const content = inputField.value;
-            
-            if (!content) return;
-
-            // 1. UI Feedback: Lock the interface
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = "✨ Polishing..."; // The "Magic" indicator
-
-            const anonymousId = "user-" + Math.floor(Math.random() * 10000); 
+            btn.disabled = true;
+            btn.innerText = "Thinking...";
 
             try {
-                const response = await fetch(`${API_URL}/api/wishes`, {
+                const res = await fetch(`${API_URL}/api/polish`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content, anonymousId })
+                    body: JSON.stringify({ content: input.value })
                 });
-
-                if (response.ok) {
-                    const newWish = await response.json();
-                    
-                    // 2. Feedback: Show user the AI transformation
-                    // Optional: You could use a nicer toast here, but alert works for MVP logic check
-                    alert(`✨ Your wish was polished to:\n\n"${newWish.content}"`);
-                    
-                    inputField.value = ''; 
-                    fetchWishes(); // Refresh list
+                const data = await res.json();
+                
+                // Update the input box with the new polished text
+                if (data.polished) {
+                    input.value = data.polished;
+                    input.style.borderColor = "#8e44ad"; // Visual cue
                 }
-            } catch (error) {
-                alert("Failed to plant wish. Server might be busy.");
+            } catch (err) {
+                alert("AI is sleeping. Try again.");
             } finally {
-                // 3. Reset UI: Unlock the interface
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = "Plant Wish";
+                btn.disabled = false;
+                btn.innerText = "✨ Magic Polish";
             }
         }
 
-        // Init
-        fetchWishes(); 
+        // 2. PLANT WISH (Saves to DB)
+        async function plantWish() {
+            const input = document.getElementById('wish-input');
+            const btn = document.getElementById('plant-btn');
+            if (!input.value) return;
+
+            btn.disabled = true;
+            try {
+                const res = await fetch(`${API_URL}/api/wishes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: input.value })
+                });
+                
+                if (res.ok) {
+                    input.value = '';
+                    input.style.borderColor = "#ddd"; // Reset style
+                    fetchWishes();
+                }
+            } catch (err) {
+                alert("Failed to plant.");
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function fetchWishes() {
+            const res = await fetch(`${API_URL}/api/wishes`);
+            const data = await res.json();
+            const list = document.getElementById('wish-list');
+            list.innerHTML = data.map(w => `<li>🌱 ${w.content}</li>`).join('');
+        }
+
+        fetchWishes();
     </script>
 </body>
 </html>
