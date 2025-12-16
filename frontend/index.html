@@ -41,73 +41,183 @@
         <ul id="wish-list"></ul>
     </div>
 
-    <script>
-        const API_URL = ''; 
+<script>
+        // Application state and references
+        const app = {
+            // UI References
+            inputEl: document.getElementById('wish-input'),
+            polishBtn: document.getElementById('polish-btn'),
+            polishTextEl: document.getElementById('polish-text'),
+            plantBtn: document.getElementById('plant-btn'),
+            wishListEl: document.getElementById('wish-list'),
+            loadingSpinner: document.getElementById('loading-spinner'),
+            notificationModal: document.getElementById('notification-modal'),
+            notificationTitle: document.getElementById('notification-title'),
+            notificationMessage: document.getElementById('notification-message'),
+            
+            // --- CORE FUNCTIONALITY ---
 
-        // 1. MAGIC POLISH (Calls AI, updates Input)
-        async function polishWish() {
-            const input = document.getElementById('wish-input');
-            const btn = document.getElementById('polish-btn');
-            if (!input.value) return;
-
-            btn.disabled = true;
-            btn.innerText = "Thinking...";
-
-            try {
-                const res = await fetch(`${API_URL}/api/polish`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content: input.value })
-                });
-                const data = await res.json();
+            /**
+             * Initializes the application by fetching and rendering existing wishes.
+             */
+            initApp: async function() {
+                this.wishListEl.innerHTML = '<li class="p-4 text-gray-500 text-center">Fetching wishes from the Tree...</li>';
                 
-                // Update the input box with the new polished text
-                if (data.polished) {
-                    input.value = data.polished;
-                    input.style.borderColor = "#8e44ad"; // Visual cue
+                try {
+                    // Fetch existing wishes from our Node.js endpoint
+                    const response = await fetch('/api/wishes'); 
+                    if (!response.ok) throw new Error("Failed to fetch wishes.");
+                    
+                    const wishes = await response.json();
+                    this.renderWishes(wishes);
+                } catch (error) {
+                    console.error("Error initializing app:", error);
+                    this.showNotification('Error', 'Failed to load existing wishes from the server.', 'text-red-600');
+                    this.wishListEl.innerHTML = '<li class="p-4 text-red-500 text-center">Server connection error.</li>';
                 }
-            } catch (err) {
-                alert("AI is sleeping. Try again.");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "✨ Magic Polish";
-            }
-        }
+            },
 
-        // 2. PLANT WISH (Saves to DB)
-        async function plantWish() {
-            const input = document.getElementById('wish-input');
-            const btn = document.getElementById('plant-btn');
-            if (!input.value) return;
-
-            btn.disabled = true;
-            try {
-                const res = await fetch(`${API_URL}/api/wishes`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content: input.value })
-                });
-                
-                if (res.ok) {
-                    input.value = '';
-                    input.style.borderColor = "#ddd"; // Reset style
-                    fetchWishes();
+            /**
+             * Renders the list of wishes to the UI.
+             * @param {Array} wishes - Assumes an array of { content: string, timestamp: number }
+             */
+            renderWishes: function(wishes) {
+                if (wishes.length === 0) {
+                    this.wishListEl.innerHTML = '<li class="p-4 text-gray-500 text-center">No wishes planted yet. Plant the first one!</li>';
+                    return;
                 }
-            } catch (err) {
-                alert("Failed to plant.");
-            } finally {
-                btn.disabled = false;
+
+                // Sort by timestamp (assuming our backend provides it)
+                wishes.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+                this.wishListEl.innerHTML = wishes.map(w => {
+                    const date = w.timestamp ? new Date(w.timestamp) : new Date(); // Use existing timestamp
+                    return `
+                        <li class="wish-item p-4 rounded-lg shadow-sm flex justify-between items-center">
+                            <span class="font-medium text-gray-800 flex-1">🌱 ${w.content}</span>
+                            <span class="text-xs text-gray-400 ml-4">${date.toLocaleTimeString()}</span>
+                        </li>
+                    `;
+                }).join('');
+            },
+
+            /**
+             * Handles the "Magic Polish" button click to enhance the wish using our secure Node.js proxy.
+             */
+            polishWish: async function() {
+                const initialWish = this.inputEl.value.trim();
+                if (!initialWish) {
+                    this.showNotification('Hold On', 'Please enter a wish first.', 'text-yellow-600');
+                    return;
+                }
+
+                this.polishBtn.disabled = true;
+                this.plantBtn.disabled = true;
+                this.loadingSpinner.classList.remove('hidden');
+                this.polishTextEl.textContent = "Casting...";
+
+                try {
+                    // *** API CALL: Route to our Node.js Backend Proxy ***
+                    const response = await fetch('/api/polish', { 
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ wish: initialWish }) // Send wish payload to backend
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Server returned status ${response.status}`);
+                    }
+
+                    const result = await response.json(); // Backend sends { polishedWish: "..." }
+                    const polishedText = result.polishedWish?.trim();
+
+                    if (polishedText) {
+                        this.inputEl.value = polishedText;
+                        this.inputEl.classList.remove('border-gray-300');
+                        this.inputEl.classList.add('border-magic-purple'); 
+                        this.showNotification('Magic Complete!', 'Your wish has been polished into a magnificent aspiration!', 'text-magic-purple');
+                    } else {
+                        throw new Error("AI returned no text content via backend.");
+                    }
+
+                } catch (err) {
+                    console.error("Failed to polish wish:", err);
+                    this.showNotification('Spell Failed', `The magic did not work: ${err.message}.`, 'text-red-600');
+                } finally {
+                    this.polishBtn.disabled = false;
+                    this.plantBtn.disabled = false;
+                    this.loadingSpinner.classList.add('hidden');
+                    this.polishTextEl.textContent = "✨ Magic Polish";
+                }
+            },
+
+            /**
+             * Handles the "Plant Wish" button click to save the wish to our SQLite database via Node.js.
+             */
+            plantWish: async function() {
+                const wishContent = this.inputEl.value.trim();
+                if (!wishContent) {
+                    this.showNotification('Hold On', 'Please write a wish to plant.', 'text-yellow-600');
+                    return;
+                }
+
+                this.plantBtn.disabled = true;
+                this.plantBtn.textContent = "Planting...";
+
+                try {
+                    // *** API CALL: Route to our Node.js Backend Save Endpoint ***
+                    const response = await fetch('/api/wishes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: wishContent }) // Send content payload to backend
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Server returned status ${response.status}`);
+                    }
+                    
+                    // Trigger a refresh after successful save
+                    await this.initApp(); 
+
+                    this.inputEl.value = ''; // Clear input
+                    this.inputEl.classList.remove('border-magic-purple');
+                    this.inputEl.classList.add('border-gray-300');
+                    this.showNotification('Wish Planted!', 'Your wish is now growing in the tree.', 'text-plant-green');
+
+                } catch (error) {
+                    console.error("Error planting wish:", error);
+                    this.showNotification('Failed to Plant', `Could not save the wish: ${error.message}.`, 'text-red-600');
+                } finally {
+                    this.plantBtn.disabled = false;
+                    this.plantBtn.textContent = "🌱 Plant Wish";
+                }
+            },
+
+            // --- UI/UTILITY FUNCTIONS (Kept from Refined Code) ---
+            
+            showNotification: function(title, message, titleClass) {
+                // ... (Notification logic remains the same)
+                this.notificationTitle.textContent = title;
+                this.notificationTitle.className = `text-xl font-bold mb-3 ${titleClass}`;
+                this.notificationMessage.textContent = message;
+                this.notificationModal.classList.remove('hidden');
+                this.notificationModal.classList.add('flex', 'opacity-0');
+                setTimeout(() => this.notificationModal.classList.remove('opacity-0'), 10);
+            },
+
+            closeNotification: function() {
+                // ... (Close logic remains the same)
+                this.notificationModal.classList.add('opacity-0');
+                setTimeout(() => this.notificationModal.classList.remove('flex'), 300);
+                setTimeout(() => this.notificationModal.classList.add('hidden'), 300);
             }
-        }
+        };
 
-        async function fetchWishes() {
-            const res = await fetch(`${API_URL}/api/wishes`);
-            const data = await res.json();
-            const list = document.getElementById('wish-list');
-            list.innerHTML = data.map(w => `<li>🌱 ${w.content}</li>`).join('');
-        }
+        // Expose app functions globally for inline onclick handlers
+        window.app = app;
 
-        fetchWishes();
+        // Initialize the application once the window loads
+        window.onload = app.initApp.bind(app);
     </script>
 </body>
 </html>
