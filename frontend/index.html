@@ -78,6 +78,11 @@
     </div>
 
         <script>
+		// --- API CONFIGURATION ---
+		// IMPORTANT: This variable allows the frontend to be tested on external hosts (like Canvas)
+		// by explicitly pointing to our production server.
+		const BASE_API_URL = 'https://136.119.38.242.nip.io';
+
         // Application state and references
         const app = {
             // UI References
@@ -94,11 +99,6 @@
             notificationMessage: document.getElementById('notification-message'),
             
             // --- CORE FUNCTIONALITY ---
-			
-			// --- API CONFIGURATION ---
-			// IMPORTANT: This variable allows the frontend to be tested on external hosts (like Canvas)
-			// by explicitly pointing to our production server.
-			const BASE_API_URL = 'https://136.119.38.242.nip.io';
 			clientId: null, // Property to store the persistent ID
             
             /**
