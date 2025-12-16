@@ -1,83 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌳 The Wish Tree</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Custom styles for better aesthetics */
-        body { font-family: 'Inter', sans-serif; background-color: #f0fdf4; }
-        .wish-item {
-            background-color: #ffffff;
-            border-left: 4px solid #10b981; /* Emerald green accent */
-            transition: all 0.3s ease;
-        }
-        .wish-item:hover {
-            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
-            transform: translateY(-2px);
-        }
-    </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'magic-purple': '#8e44ad',
-                        'plant-green': '#27ae60',
-                    }
-                }
-            }
-        }
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌳 The Wish Tree</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better aesthetics */
+        body { font-family: 'Inter', sans-serif; background-color: #f0fdf4; }
+        .wish-item {
+            background-color: #ffffff;
+            border-left: 4px solid #10b981; /* Emerald green accent */
+            transition: all 0.3s ease;
+        }
+        .wish-item:hover {
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'magic-purple': '#8e44ad',
+                        'plant-green': '#27ae60',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 <body>
-    <div id="app" class="min-h-screen flex items-start justify-center p-4 sm:p-8">
-        <div class="w-full max-w-xl bg-white p-6 sm:p-10 rounded-xl shadow-2xl border border-gray-100 mt-10">
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 mb-2">
-                🌳 The Wish Tree
-            </h1>
-            <p class="text-center text-sm text-gray-500 mb-8">Polish your dreams with AI magic and plant them for growth.</p>
+    <div id="app" class="min-h-screen flex items-start justify-center p-4 sm:p-8">
+        <div class="w-full max-w-xl bg-white p-6 sm:p-10 rounded-xl shadow-2xl border border-gray-100 mt-10">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 mb-2">
+                🌳 The Wish Tree
+            </h1>
+            <p class="text-center text-sm text-gray-500 mb-8">Polish your dreams with AI magic and plant them for growth.</p>
 
-                        <div class="space-y-4">
-                <input type="text" id="wish-input" placeholder="Enter your wish (e.g., I want a better job)..."
-                       class="w-full p-3 sm:p-4 border-2 border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-plant-green transition duration-200">
+            <!-- Input & Buttons -->
+            <div class="space-y-4">
+                <input type="text" id="wish-input" placeholder="Enter your wish (e.g., I want a better job)..."
+                       class="w-full p-3 sm:p-4 border-2 border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-plant-green transition duration-200">
 
-                <div class="flex flex-col sm:flex-row gap-3">
-                                        <button id="polish-btn" onclick="app.polishWish()" 
-                            class="flex-1 flex items-center justify-center p-3 sm:p-4 bg-magic-purple hover:bg-opacity-90 text-white font-semibold rounded-lg shadow-md transition duration-200 disabled:bg-gray-400">
-                                                <span id="polish-text">✨ Magic Polish</span> 
-                    </button>
-                                        <button id="plant-btn" onclick="app.plantWish()" 
-                            class="flex-1 flex items-center justify-center p-3 sm:p-4 bg-plant-green hover:bg-opacity-90 text-white font-semibold rounded-lg shadow-md transition duration-200 disabled:bg-gray-400">
-                        🌱 Plant Wish
-                    </button>
-                </div>
-            </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button id="polish-btn" onclick="app.polishWish()"
+                            class="flex-1 flex items-center justify-center p-3 sm:p-4 bg-magic-purple hover:bg-opacity-90 text-white font-semibold rounded-lg shadow-md transition duration-200 disabled:bg-gray-400">
+                        <span id="polish-text">✨ Magic Polish</span>
+                    </button>
+                    <button id="plant-btn" onclick="app.plantWish()"
+                            class="flex-1 flex items-center justify-center p-3 sm:p-4 bg-plant-green hover:bg-opacity-90 text-white font-semibold rounded-lg shadow-md transition duration-200 disabled:bg-gray-400">
+                        🌱 Plant Wish
+                    </button>
+                </div>
+            </div>
 
-                        <div id="loading-spinner" class="mt-8 text-center hidden">
-                <div class="animate-spin inline-block w-8 h-8 border-4 border-magic-purple border-t-transparent rounded-full" role="status"></div>
-                <p class="text-magic-purple mt-2 text-sm">Casting the spell...</p>
-            </div>
+            <!-- Loading Spinner (Hidden by default) -->
+            <div id="loading-spinner" class="mt-8 text-center hidden">
+                <div class="animate-spin inline-block w-8 h-8 border-4 border-magic-purple border-t-transparent rounded-full" role="status"></div>
+                <p class="text-magic-purple mt-2 text-sm">Casting the spell...</p>
+            </div>
 
-                        <h3 class="text-xl font-bold text-gray-700 mt-10 mb-4 border-b pb-2">Growing Wishes:</h3>
-            <ul id="wish-list" class="space-y-3">
-                <li class="p-4 text-gray-500 text-center">Loading wishes...</li>
-            </ul>
-        </div>
-    </div>
+            <!-- Wish List -->
+            <h3 class="text-xl font-bold text-gray-700 mt-10 mb-4 border-b pb-2">Growing Wishes:</h3>
+            <ul id="wish-list" class="space-y-3">
+                <li class="p-4 text-gray-500 text-center">Loading wishes...</li>
+            </ul>
+        </div>
+    </div>
 
-        <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 transition-opacity duration-300" onclick="app.closeNotification()">
-        <div class="bg-white p-6 rounded-lg shadow-2xl max-w-sm w-full transform scale-95 transition-transform duration-300" onclick="event.stopPropagation()">
-            <h4 id="notification-title" class="text-xl font-bold mb-3 text-red-600">Error</h4>
-            <p id="notification-message" class="text-gray-700 mb-4"></p>
-            <button class="w-full py-2 bg-plant-green text-white font-semibold rounded-lg hover:bg-opacity-90" onclick="app.closeNotification()">
-                Understood
-            </button>
-        </div>
-    </div>
+    <!-- Custom Notification/Modal -->
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 transition-opacity duration-300" onclick="app.closeNotification()">
+        <div class="bg-white p-6 rounded-lg shadow-2xl max-w-sm w-full transform scale-95 transition-transform duration-300" onclick="event.stopPropagation()">
+            <h4 id="notification-title" class="text-xl font-bold mb-3 text-red-600">Error</h4>
+            <p id="notification-message" class="text-gray-700 mb-4"></p>
+            <button class="w-full py-2 bg-plant-green text-white font-semibold rounded-lg hover:bg-opacity-90" onclick="app.closeNotification()">
+                Understood
+            </button>
+        </div>
+    </div>
 
-        <script>
+    <!-- JavaScript Logic (PRESERVED) -->
+    <script>
 		// --- API CONFIGURATION ---
 		// IMPORTANT: This variable allows the frontend to be tested on external hosts (like Canvas)
 		// by explicitly pointing to our production server.
@@ -154,10 +160,19 @@
 
                 this.wishListEl.innerHTML = wishes.map(w => {
                     const date = new Date(w.createdAt);
+                    // Simplified date formatting: Time + short date (e.g., 06:14 PM Dec 16)
+                    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const formattedDate = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                    
                     return `
-                        <li class="wish-item p-4 rounded-lg shadow-sm flex justify-between items-center">
-                            <span class="font-medium text-gray-800 flex-1">🌱 ${w.content}</span>
-                            <span class="text-xs text-gray-400 ml-4">${date.toLocaleTimeString()} (${date.toLocaleDateString()})</span>
+                        <!-- Applied relative positioning to the list item -->
+                        <li class="wish-item p-4 rounded-lg shadow-sm relative">
+                            <!-- Main Wish Content (Takes full width) -->
+                            <span class="font-medium text-gray-800 pr-16 block">🌱 ${w.content}</span>
+                            <!-- Timestamp (Absolute position at bottom right) -->
+                            <span class="text-xs text-gray-500 absolute bottom-1 right-2 opacity-70">
+                                ${formattedTime} ${formattedDate}
+                            </span>
                         </li>
                     `;
                 }).join('');
