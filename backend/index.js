@@ -12,7 +12,7 @@ const DB_PATH = path.join(__dirname, 'wishes.db');
 // --- AI SETUP (Corrected: Gemini 2.5 Flash) ---
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 // Using the 2025 standard model as requested
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-09-2025" });
 
 app.use(express.json());
 app.use(cors());
@@ -57,18 +57,19 @@ app.post('/api/polish', async (req, res) => {
 // 2. THE MEMORY: Just Save (Don't Polish)
 app.post('/api/wishes', (req, res) => {
     const { content, anonymousId } = req.body;
-    if (!content) return res.status(400).json({ error: "Content required" });
+	if (!content || !anonymousId) { // Check for both required fields now
+		return res.status(400).json({ error: 'Wish content and anonymousId are required.' });
+	}
 
-    const createdAt = new Date().toISOString();
     const status = "PENDING";
-    const anon = anonymousId || "anon";
 
-    const sql = `INSERT INTO wishes (content, anonymousId, createdAt, status) VALUES (?, ?, ?, ?)`;
+    const sql = `INSERT INTO wishes (content, anonymousId, createdAt, status) VALUES (?, ?, DATETIME('now'), ?)`;
     
-    db.run(sql, [content, anon, createdAt, status], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id: this.lastID, content, status });
-    });
+	// PASS ONLY 3 VARIABLES: content, anonymousId, and status
+    db.run(sql, [content, anonymousId, status], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ id: this.lastID, content, status });
+    });
 });
 
 // GET Wishes

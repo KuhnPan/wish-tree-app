@@ -1,223 +1,286 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Startup Zero: Wish Tree</title>
-    <style>
-        body { font-family: 'Courier New', monospace; background-color: #f4f4f9; text-align: center; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        
-        /* Input & Button Group */
-        .input-group { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-        input { padding: 12px; width: 60%; border: 2px solid #ddd; border-radius: 6px; font-size: 16px; }
-        
-        /* THE TWO BUTTONS */
-        .btn { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
-        .btn-magic { background-color: #8e44ad; } /* Purple for AI */
-        .btn-magic:hover { background-color: #732d91; }
-        .btn-plant { background-color: #27ae60; } /* Green for Save */
-        .btn-plant:hover { background-color: #219150; }
-        .btn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
-
-        ul { list-style: none; padding: 0; text-align: left; }
-        li { background: #ecf0f1; margin: 10px 0; padding: 15px; border-left: 5px solid #27ae60; border-radius: 4px; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌳 The Wish Tree</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better aesthetics */
+        body { font-family: 'Inter', sans-serif; background-color: #f0fdf4; }
+        .wish-item {
+            background-color: #ffffff;
+            border-left: 4px solid #10b981; /* Emerald green accent */
+            transition: all 0.3s ease;
+        }
+        .wish-item:hover {
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'magic-purple': '#8e44ad',
+                        'plant-green': '#27ae60',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 <body>
-    <div class="container">
-        <h1>🌳 The Wish Tree</h1>
-        
-        <div class="input-group">
-            <input type="text" id="wish-input" placeholder="I want to be rich...">
-        </div>
-        
-        <div class="input-group">
-            <button class="btn btn-magic" id="polish-btn" onclick="polishWish()">✨ Magic Polish</button>
-            <button class="btn btn-plant" id="plant-btn" onclick="plantWish()">🌱 Plant Wish</button>
-        </div>
-        
-        <h3>Growing Wishes:</h3>
-        <ul id="wish-list"></ul>
-    </div>
+    <div id="app" class="min-h-screen flex items-start justify-center p-4 sm:p-8">
+        <div class="w-full max-w-xl bg-white p-6 sm:p-10 rounded-xl shadow-2xl border border-gray-100 mt-10">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 mb-2">
+                🌳 The Wish Tree
+            </h1>
+            <p class="text-center text-sm text-gray-500 mb-8">Polish your dreams with AI magic and plant them for growth.</p>
 
-<script>
-        // Application state and references
-        const app = {
-            // UI References
-            inputEl: document.getElementById('wish-input'),
-            polishBtn: document.getElementById('polish-btn'),
-            polishTextEl: document.getElementById('polish-text'),
-            plantBtn: document.getElementById('plant-btn'),
-            wishListEl: document.getElementById('wish-list'),
-            loadingSpinner: document.getElementById('loading-spinner'),
-            notificationModal: document.getElementById('notification-modal'),
-            notificationTitle: document.getElementById('notification-title'),
-            notificationMessage: document.getElementById('notification-message'),
-            
-            // --- CORE FUNCTIONALITY ---
+                        <div class="space-y-4">
+                <input type="text" id="wish-input" placeholder="Enter your wish (e.g., I want a better job)..."
+                       class="w-full p-3 sm:p-4 border-2 border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-plant-green transition duration-200">
 
-            /**
-             * Initializes the application by fetching and rendering existing wishes.
-             */
-            initApp: async function() {
-                this.wishListEl.innerHTML = '<li class="p-4 text-gray-500 text-center">Fetching wishes from the Tree...</li>';
-                
-                try {
-                    // Fetch existing wishes from our Node.js endpoint
-                    const response = await fetch('/api/wishes'); 
-                    if (!response.ok) throw new Error("Failed to fetch wishes.");
-                    
-                    const wishes = await response.json();
-                    this.renderWishes(wishes);
-                } catch (error) {
-                    console.error("Error initializing app:", error);
-                    this.showNotification('Error', 'Failed to load existing wishes from the server.', 'text-red-600');
-                    this.wishListEl.innerHTML = '<li class="p-4 text-red-500 text-center">Server connection error.</li>';
-                }
-            },
+                <div class="flex flex-col sm:flex-row gap-3">
+                                        <button id="polish-btn" onclick="app.polishWish()" 
+                            class="flex-1 flex items-center justify-center p-3 sm:p-4 bg-magic-purple hover:bg-opacity-90 text-white font-semibold rounded-lg shadow-md transition duration-200 disabled:bg-gray-400">
+                                                <span id="polish-text">✨ Magic Polish</span> 
+                    </button>
+                                        <button id="plant-btn" onclick="app.plantWish()" 
+                            class="flex-1 flex items-center justify-center p-3 sm:p-4 bg-plant-green hover:bg-opacity-90 text-white font-semibold rounded-lg shadow-md transition duration-200 disabled:bg-gray-400">
+                        🌱 Plant Wish
+                    </button>
+                </div>
+            </div>
 
-            /**
-             * Renders the list of wishes to the UI.
-             * @param {Array} wishes - Assumes an array of { content: string, timestamp: number }
-             */
-            renderWishes: function(wishes) {
-                if (wishes.length === 0) {
-                    this.wishListEl.innerHTML = '<li class="p-4 text-gray-500 text-center">No wishes planted yet. Plant the first one!</li>';
-                    return;
-                }
+                        <div id="loading-spinner" class="mt-8 text-center hidden">
+                <div class="animate-spin inline-block w-8 h-8 border-4 border-magic-purple border-t-transparent rounded-full" role="status"></div>
+                <p class="text-magic-purple mt-2 text-sm">Casting the spell...</p>
+            </div>
 
-                // Sort by timestamp (assuming our backend provides it)
-                wishes.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                        <h3 class="text-xl font-bold text-gray-700 mt-10 mb-4 border-b pb-2">Growing Wishes:</h3>
+            <ul id="wish-list" class="space-y-3">
+                <li class="p-4 text-gray-500 text-center">Loading wishes...</li>
+            </ul>
+        </div>
+    </div>
 
-                this.wishListEl.innerHTML = wishes.map(w => {
-                    const date = w.timestamp ? new Date(w.timestamp) : new Date(); // Use existing timestamp
-                    return `
-                        <li class="wish-item p-4 rounded-lg shadow-sm flex justify-between items-center">
-                            <span class="font-medium text-gray-800 flex-1">🌱 ${w.content}</span>
-                            <span class="text-xs text-gray-400 ml-4">${date.toLocaleTimeString()}</span>
-                        </li>
-                    `;
-                }).join('');
-            },
+        <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 transition-opacity duration-300" onclick="app.closeNotification()">
+        <div class="bg-white p-6 rounded-lg shadow-2xl max-w-sm w-full transform scale-95 transition-transform duration-300" onclick="event.stopPropagation()">
+            <h4 id="notification-title" class="text-xl font-bold mb-3 text-red-600">Error</h4>
+            <p id="notification-message" class="text-gray-700 mb-4"></p>
+            <button class="w-full py-2 bg-plant-green text-white font-semibold rounded-lg hover:bg-opacity-90" onclick="app.closeNotification()">
+                Understood
+            </button>
+        </div>
+    </div>
 
-            /**
-             * Handles the "Magic Polish" button click to enhance the wish using our secure Node.js proxy.
-             */
-            polishWish: async function() {
-                const initialWish = this.inputEl.value.trim();
-                if (!initialWish) {
-                    this.showNotification('Hold On', 'Please enter a wish first.', 'text-yellow-600');
-                    return;
-                }
+        <script>
+        // Application state and references
+        const app = {
+            // UI References
+            inputEl: document.getElementById('wish-input'),
+            polishBtn: document.getElementById('polish-btn'),
+            // Use the new span reference
+            polishTextEl: document.getElementById('polish-text'), 
+            plantBtn: document.getElementById('plant-btn'),
+            wishListEl: document.getElementById('wish-list'),
+            // Restore the spinner and modal references
+            loadingSpinner: document.getElementById('loading-spinner'), 
+            notificationModal: document.getElementById('notification-modal'),
+            notificationTitle: document.getElementById('notification-title'),
+            notificationMessage: document.getElementById('notification-message'),
+            
+            // --- CORE FUNCTIONALITY ---
+			
+			clientId: null, // Property to store the persistent ID
+            
+            /**
+             * Ensures a stable, unique ID exists for the user.
+             */
+            getOrCreateClientId: function() {
+                let id = localStorage.getItem('wishTreeClientId');
+                if (!id) {
+                    id = 'WISH-' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+                    localStorage.setItem('wishTreeClientId', id);
+                }
+                this.clientId = id;
+                return id;
+            },
+			
+            /**
+             * Initializes the application by getting ClientID and fetching wishes.
+             */
+            initApp: async function() {
+                this.getOrCreateClientId(); // FIXED: Must be called first
+                this.wishListEl.innerHTML = '<li class="p-4 text-gray-500 text-center">Fetching wishes from the Tree...</li>';
+                
+                try {
+                    // Fetch existing wishes from our Node.js endpoint
+                    const response = await fetch('/api/wishes'); 
+                    if (!response.ok) throw new Error("Failed to fetch wishes.");
+                    
+                    const wishes = await response.json();
+                    this.renderWishes(wishes);
+                } catch (error) {
+                    console.error("Error initializing app:", error);
+                    // Use the new modal for errors
+                    this.showNotification('Error', 'Failed to load existing wishes from the server.', 'text-red-600'); 
+                    this.wishListEl.innerHTML = '<li class="p-4 text-red-500 text-center">Server connection error.</li>';
+                }
+            },
 
-                this.polishBtn.disabled = true;
-                this.plantBtn.disabled = true;
-                this.loadingSpinner.classList.remove('hidden');
-                this.polishTextEl.textContent = "Casting...";
+            /**
+             * Renders the list of wishes to the UI.
+             */
+            renderWishes: function(wishes) {
+                if (wishes.length === 0) {
+                    this.wishListEl.innerHTML = '<li class="p-4 text-gray-500 text-center">No wishes planted yet. Plant the first one!</li>';
+                    return;
+                }
 
-                try {
-                    // *** API CALL: Route to our Node.js Backend Proxy ***
-                    const response = await fetch('/api/polish', { 
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ wish: initialWish }) // Send wish payload to backend
-                    });
+				// Sort by createdAt (latest first). Uses the corrected backend field.
+				wishes.sort((a, b) => {
+					const dateA = new Date(a.createdAt).getTime();
+					const dateB = new Date(b.createdAt).getTime();
+					return dateB - dateA; // Descending order
+				});
 
-                    if (!response.ok) {
-                        throw new Error(`Server returned status ${response.status}`);
-                    }
+                this.wishListEl.innerHTML = wishes.map(w => {
+                    const date = new Date(w.createdAt);
+                    return `
+                        <li class="wish-item p-4 rounded-lg shadow-sm flex justify-between items-center">
+                            <span class="font-medium text-gray-800 flex-1">🌱 ${w.content}</span>
+                            <span class="text-xs text-gray-400 ml-4">${date.toLocaleTimeString()} (${date.toLocaleDateString()})</span>
+                        </li>
+                    `;
+                }).join('');
+            },
 
-                    const result = await response.json(); // Backend sends { polishedWish: "..." }
-                    const polishedText = result.polishedWish?.trim();
+            /**
+             * Handles the "Magic Polish" button click.
+             */
+            polishWish: async function() {
+                const initialWish = this.inputEl.value.trim();
+				const clientId = this.clientId; 
+                if (!initialWish) {
+                    this.showNotification('Hold On', 'Please enter a wish first.', 'text-yellow-600');
+                    return;
+                }
 
-                    if (polishedText) {
-                        this.inputEl.value = polishedText;
-                        this.inputEl.classList.remove('border-gray-300');
-                        this.inputEl.classList.add('border-magic-purple'); 
-                        this.showNotification('Magic Complete!', 'Your wish has been polished into a magnificent aspiration!', 'text-magic-purple');
-                    } else {
-                        throw new Error("AI returned no text content via backend.");
-                    }
+                this.polishBtn.disabled = true;
+                this.plantBtn.disabled = true;
+                // Safely show loading indicator
+                this.loadingSpinner.classList.remove('hidden'); 
+                this.polishTextEl.textContent = "Casting...";
 
-                } catch (err) {
-                    console.error("Failed to polish wish:", err);
-                    this.showNotification('Spell Failed', `The magic did not work: ${err.message}.`, 'text-red-600');
-                } finally {
-                    this.polishBtn.disabled = false;
-                    this.plantBtn.disabled = false;
-                    this.loadingSpinner.classList.add('hidden');
-                    this.polishTextEl.textContent = "✨ Magic Polish";
-                }
-            },
+                try {
+                    // Route to secure Node.js Backend Proxy
+                    const response = await fetch('/api/polish', { 
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        // Sending anonymousId for future rate limiting!
+                        body: JSON.stringify({ content: initialWish, anonymousId: clientId }) 
+                    });
 
-            /**
-             * Handles the "Plant Wish" button click to save the wish to our SQLite database via Node.js.
-             */
-            plantWish: async function() {
-                const wishContent = this.inputEl.value.trim();
-                if (!wishContent) {
-                    this.showNotification('Hold On', 'Please write a wish to plant.', 'text-yellow-600');
-                    return;
-                }
+                    if (!response.ok) {
+                        throw new Error(`Server returned status ${response.status}`);
+                    }
 
-                this.plantBtn.disabled = true;
-                this.plantBtn.textContent = "Planting...";
+                    const result = await response.json(); 
+                    const polishedText = result.polished?.trim(); // Backend uses 'polished'
 
-                try {
-                    // *** API CALL: Route to our Node.js Backend Save Endpoint ***
-                    const response = await fetch('/api/wishes', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ content: wishContent }) // Send content payload to backend
-                    });
+                    if (polishedText) {
+                        this.inputEl.value = polishedText;
+                        // Visual cue restored
+                        this.inputEl.classList.add('border-magic-purple'); 
+                        this.showNotification('Magic Complete!', 'Your wish has been polished into a magnificent aspiration!', 'text-magic-purple');
+                    } else {
+                        throw new Error("AI returned no text content via backend.");
+                    }
 
-                    if (!response.ok) {
-                        throw new Error(`Server returned status ${response.status}`);
-                    }
-                    
-                    // Trigger a refresh after successful save
-                    await this.initApp(); 
+                } catch (err) {
+                    console.error("Failed to polish wish:", err);
+                    this.showNotification('Spell Failed', `The magic did not work: ${err.message}.`, 'text-red-600');
+                } finally {
+                    this.polishBtn.disabled = false;
+                    this.plantBtn.disabled = false;
+                    // Safely hide loading indicator
+                    this.loadingSpinner.classList.add('hidden'); 
+                    this.polishTextEl.textContent = "✨ Magic Polish";
+                }
+            },
 
-                    this.inputEl.value = ''; // Clear input
-                    this.inputEl.classList.remove('border-magic-purple');
-                    this.inputEl.classList.add('border-gray-300');
-                    this.showNotification('Wish Planted!', 'Your wish is now growing in the tree.', 'text-plant-green');
+            /**
+             * Handles the "Plant Wish" button click.
+             */
+            plantWish: async function() {
+                const wishContent = this.inputEl.value.trim();
+				const clientId = this.clientId; 
+                if (!wishContent) {
+                    this.showNotification('Hold On', 'Please write a wish to plant.', 'text-yellow-600');
+                    return;
+                }
 
-                } catch (error) {
-                    console.error("Error planting wish:", error);
-                    this.showNotification('Failed to Plant', `Could not save the wish: ${error.message}.`, 'text-red-600');
-                } finally {
-                    this.plantBtn.disabled = false;
-                    this.plantBtn.textContent = "🌱 Plant Wish";
-                }
-            },
+                this.plantBtn.disabled = true;
+                this.plantBtn.textContent = "Planting...";
 
-            // --- UI/UTILITY FUNCTIONS (Kept from Refined Code) ---
-            
-            showNotification: function(title, message, titleClass) {
-                // ... (Notification logic remains the same)
-                this.notificationTitle.textContent = title;
-                this.notificationTitle.className = `text-xl font-bold mb-3 ${titleClass}`;
-                this.notificationMessage.textContent = message;
-                this.notificationModal.classList.remove('hidden');
-                this.notificationModal.classList.add('flex', 'opacity-0');
-                setTimeout(() => this.notificationModal.classList.remove('opacity-0'), 10);
-            },
+                try {
+                    // Route to Node.js Backend Save Endpoint
+                    const response = await fetch('/api/wishes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        // Sending anonymousId for saving!
+                        body: JSON.stringify({ content: wishContent, anonymousId: clientId }) 
+                    });
 
-            closeNotification: function() {
-                // ... (Close logic remains the same)
-                this.notificationModal.classList.add('opacity-0');
-                setTimeout(() => this.notificationModal.classList.remove('flex'), 300);
-                setTimeout(() => this.notificationModal.classList.add('hidden'), 300);
-            }
-        };
+                    if (!response.ok) {
+                        throw new Error(`Server returned status ${response.status}`);
+                    }
+                    
+                    await this.initApp(); // Refresh list
 
-        // Expose app functions globally for inline onclick handlers
-        window.app = app;
+                    this.inputEl.value = ''; // Clear input
+                    // Restore neutral visual state
+                    this.inputEl.classList.remove('border-magic-purple');
+                    this.inputEl.classList.add('border-gray-300');
+                    this.showNotification('Wish Planted!', 'Your wish is now growing in the tree.', 'text-plant-green');
 
-        // Initialize the application once the window loads
-        window.onload = app.initApp.bind(app);
-    </script>
+                } catch (error) {
+                    console.error("Error planting wish:", error);
+                    this.showNotification('Failed to Plant', `Could not save the wish: ${error.message}.`, 'text-red-600');
+                } finally {
+                    this.plantBtn.disabled = false;
+                    this.plantBtn.textContent = "🌱 Plant Wish";
+                }
+            },
+
+            // --- UI/UTILITY FUNCTIONS ---
+            
+            showNotification: function(title, message, titleClass) {
+                this.notificationTitle.textContent = title;
+                // Removed Tailwind-specific class prefixes to avoid duplication errors on class replacement
+                this.notificationTitle.className = `text-xl font-bold mb-3 ${titleClass}`; 
+                this.notificationMessage.textContent = message;
+                this.notificationModal.classList.remove('hidden');
+                this.notificationModal.classList.add('flex', 'opacity-0');
+                setTimeout(() => this.notificationModal.classList.remove('opacity-0'), 10);
+            },
+
+            closeNotification: function() {
+                this.notificationModal.classList.add('opacity-0');
+                setTimeout(() => this.notificationModal.classList.remove('flex'), 300);
+                setTimeout(() => this.notificationModal.classList.add('hidden'), 300);
+            }
+        };
+
+        // Expose app functions globally for inline onclick handlers
+        window.app = app;
+
+        // Initialize the application once the window loads
+        window.onload = app.initApp.bind(app);
+    </script>
 </body>
 </html>
