@@ -95,6 +95,10 @@
             
             // --- CORE FUNCTIONALITY ---
 			
+			// --- API CONFIGURATION ---
+			// IMPORTANT: This variable allows the frontend to be tested on external hosts (like Canvas)
+			// by explicitly pointing to our production server.
+			const BASE_API_URL = 'https://136.119.38.242.nip.io';
 			clientId: null, // Property to store the persistent ID
             
             /**
@@ -119,7 +123,7 @@
                 
                 try {
                     // Fetch existing wishes from our Node.js endpoint
-                    const response = await fetch('/api/wishes'); 
+                    const response = await fetch(BASE_API_URL + '/api/wishes'); 
                     if (!response.ok) throw new Error("Failed to fetch wishes.");
                     
                     const wishes = await response.json();
@@ -178,7 +182,7 @@
 
                 try {
                     // Route to secure Node.js Backend Proxy
-                    const response = await fetch('/api/polish', { 
+                    const response = await fetch(BASE_API_URL + '/api/polish', { 
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         // Sending anonymousId for future rate limiting!
@@ -229,7 +233,7 @@
 
                 try {
                     // Route to Node.js Backend Save Endpoint
-                    const response = await fetch('/api/wishes', {
+                    const response = await fetch(BASE_API_URL + '/api/wishes', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         // Sending anonymousId for saving!
